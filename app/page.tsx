@@ -1,5 +1,11 @@
-import { supabase } from "../lib/supabase";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { Trophy, Users, ShieldCheck, ShieldX } from "lucide-react";
+
+const SUPABASE_URL = "https://ehprddsjphmcftzvzhyj.supabase.co";
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVocHJkZHNqcGhtY2Z0enZ6aHlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTc3MzMsImV4cCI6MjA5NjU3MzczM30.wt0NXCMqxjlqSFO-tTHCUDToYEAa1LoLzCRi8_XPLDQ";
 
 function getCountryCode(country?: string) {
   const codes: Record<string, string> = {
@@ -25,173 +31,93 @@ function getCountryCode(country?: string) {
 }
 
 export default async function Home() {
-  const { data: participants } = await supabase
-    .from("participants")
-    .select("*")
-    .order("id");
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/participants?select=*`,
+    {
+      method: "GET",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      cache: "no-store",
+    }
+  );
 
-  const total = participants?.length || 0;
+  const participants = await res.json();
 
-  const active =
-    participants?.filter((p) => p.status === "ACTIVE").length || 0;
+  const safeData = Array.isArray(participants) ? participants : [];
 
-  const eliminated =
-    participants?.filter((p) => p.status === "ELIMINATED").length || 0;
+  const total = safeData.length;
+
+  const active = safeData.filter(
+    (p) => (p.status || "").toUpperCase() === "ACTIVE"
+  ).length;
+
+  const eliminated = safeData.filter(
+    (p) => (p.status || "").toUpperCase() === "ELIMINATED"
+  ).length;
 
   return (
-    <main className="min-h-screen text-white overflow-hidden relative">
+    <main className="min-h-screen text-white relative overflow-hidden">
 
-      {/* BACKGROUND IMAGE */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('/worldcup.jpg')",
-        }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/worldcup.jpg')" }}
       />
-
-      {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/70" />
-
-      {/* GRADIENT OVERLAY */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-slate-950/60 to-black/95" />
-
-      {/* GLOW EFFECTS */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 h-[500px] w-[500px] rounded-full bg-blue-500/20 blur-3xl" />
-        <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-purple-500/20 blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-yellow-500/10 blur-3xl" />
-      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
 
-        {/* HERO */}
         <section className="min-h-screen flex flex-col justify-center items-center text-center">
-
-          <div className="mb-4 rounded-full border border-white/20 bg-white/5 backdrop-blur-xl px-5 py-2 text-sm text-slate-200">
-            FIFA WORLD CUP SURVIVOR CHALLENGE
-          </div>
-
           <div className="flex items-center gap-4">
             <Trophy className="w-12 h-12 text-yellow-400" />
-
-            <h1 className="text-7xl md:text-9xl font-black tracking-tight bg-gradient-to-r from-yellow-300 via-white to-blue-300 text-transparent bg-clip-text drop-shadow-2xl">
+            <h1 className="text-7xl font-black bg-gradient-to-r from-yellow-300 via-white to-blue-300 text-transparent bg-clip-text">
               RIUNG PILDUN
             </h1>
           </div>
 
-          <h2 className="text-4xl md:text-6xl font-bold mt-3 text-slate-200">
-            2026
-          </h2>
-
-          <p className="mt-6 text-slate-300 max-w-2xl text-lg">
-            Pilih satu negara. Jika negara gugur, kamu gugur.
-            Bertahan sampai final dan jadilah juara RIUNG PILDUN 2026.
-          </p>
-
-          <div className="mt-10">
-            <button className="rounded-full bg-yellow-400 text-black px-8 py-4 font-bold hover:scale-105 transition-all duration-300">
-              ENTER TOURNAMENT
-            </button>
-          </div>
-
+          <h2 className="text-5xl mt-3">2026</h2>
         </section>
 
-        {/* STATS */}
         <section className="grid md:grid-cols-3 gap-6 mb-16">
 
-          <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/10 p-8">
+          <div className="bg-white/10 p-8 rounded-3xl">
             <Users className="w-10 h-10 mb-4" />
-
-            <h3 className="text-5xl font-black">
-              {total}
-            </h3>
-
-            <p className="text-slate-300 mt-2">
-              PARTICIPANTS
-            </p>
+            <h3 className="text-5xl font-black">{total}</h3>
+            <p>PARTICIPANTS</p>
           </div>
 
-          <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-green-500/20 p-8">
+          <div className="bg-white/10 p-8 rounded-3xl">
             <ShieldCheck className="w-10 h-10 mb-4 text-green-400" />
-
-            <h3 className="text-5xl font-black">
-              {active}
-            </h3>
-
-            <p className="text-green-400 mt-2">
-              SURVIVORS
-            </p>
+            <h3 className="text-5xl font-black">{active}</h3>
+            <p>ACTIVE</p>
           </div>
 
-          <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-red-500/20 p-8">
+          <div className="bg-white/10 p-8 rounded-3xl">
             <ShieldX className="w-10 h-10 mb-4 text-red-400" />
-
-            <h3 className="text-5xl font-black">
-              {eliminated}
-            </h3>
-
-            <p className="text-red-400 mt-2">
-              ELIMINATED
-            </p>
+            <h3 className="text-5xl font-black">{eliminated}</h3>
+            <p>ELIMINATED</p>
           </div>
 
         </section>
 
-        {/* PARTICIPANTS */}
-        <section className="pb-20">
+        <section className="pb-20 grid md:grid-cols-3 gap-6">
 
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">
-              Survivor Board
-            </h2>
+          {safeData.map((p: any) => (
+            <div key={p.id} className="bg-white/10 p-6 rounded-3xl">
 
-            <span className="text-slate-300">
-              {active} peserta masih bertahan
-            </span>
-          </div>
+              <div className="text-xl font-bold">{p.username}</div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            {participants?.map((p) => (
-              <div
-                key={p.id}
-                className={`rounded-3xl bg-white/10 backdrop-blur-xl border p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl
-                ${
-                  p.status === "ACTIVE"
-                    ? "border-green-500/20"
-                    : "border-red-500/20 opacity-70"
-                }`}
-              >
-               <img
-  className="w-16 h-12 object-cover rounded-md mb-4 border border-white/20"
-  src={`https://flagcdn.com/w80/${getCountryCode(
-    p.selected_team
-  )}.png`}
-  alt={p.selected_team || ""}
- />
-
-                <div className="text-sm uppercase text-slate-300">
-                  {p.selected_team || "No Country"}
-                </div>
-
-                <div className="text-2xl font-bold mt-2">
-                  {p.username}
-                </div>
-
-                <div
-                  className={`mt-4 inline-block rounded-full px-3 py-1 text-xs font-semibold
-                  ${
-                    p.status === "ACTIVE"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-red-500/20 text-red-400"
-                  }`}
-                >
-                  {p.status}
-                </div>
+              <div className="text-sm opacity-70">
+                {p.selected_team}
               </div>
-            ))}
 
-          </div>
+              <div className="mt-2 text-sm">
+                {(p.status || "").toUpperCase()}
+              </div>
+
+            </div>
+          ))}
 
         </section>
 
